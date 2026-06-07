@@ -252,5 +252,5 @@ This project is intended for academic and educational purposes. All rights belon
 ---
 
 <div align="center">
-  <sub>Built with ❤️ for Software Construction and Development · 2025</sub>
+  <sub>Built with ❤️ for Software Construction and Development · 2026</sub>
 </div>
