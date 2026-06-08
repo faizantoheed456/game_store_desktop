@@ -10,7 +10,7 @@
 |----------------|-------------------|
 | **Group Leader** | M. Rohan Jabbar |
 | **Developer**    | Faizan Toheed   |
-| **Developer**    | M. Usman        |
+| **Developer**    | Muhammad Usman        |
 
 **Course:** Software Construction and Development  
 **Repository:** [faizantoheed456/game_store_desktop](https://github.com/faizantoheed456/game_store_desktop)
