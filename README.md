@@ -1,6 +1,6 @@
 # 🎮 GameVault — Desktop Digital Game Storefront
 
-> A modern, dark-themed Python desktop application inspired by Steam. Features secure user authentication, a dynamic game catalog, and a fully decoupled MVC architecture backed by a MySQL database.
+> A modern, dark-themed Python desktop application inspired by Steam. Features secure user authentication, a dynamic game catalog, and a fully decoupled MVC architecture.
 
 ---
 
@@ -23,6 +23,7 @@
 - [Proposed Solution](#-proposed-solution)
 - [Features](#-features)
 - [Tech Stack](#-tech-stack)
+- [Recent Progress](#-recent-progress)
 - [Architecture](#-architecture)
 - [Project Structure](#-project-structure)
 - [Getting Started](#-getting-started)
@@ -46,14 +47,14 @@ Furthermore, many introductory database or desktop application projects rely on 
 In the context of a **Digital Game Store** (a desktop-based Steam clone), a seamless user experience is critical. Gamers and administrators expect a highly responsive visual grid layout, immediate data rendering, and a secure gateway. Building this requires addressing three specific challenges:
 
 - **🔐 Authentication Security** — Ensuring user credentials are encrypted, verified against a relational database management system (RDBMS), and session-managed without compromising application performance.
-- **📦 Data Layer Separation** — Dynamically pulling large sets of relational data (game titles, genres, pricing, and assets) from a MySQL database and rendering them cleanly without freezing the user interface.
+- **📦 Data Layer Separation** — Dynamically pulling large sets of relational data (game titles, genres, pricing, and assets) from a relational database and rendering them cleanly without freezing the user interface.
 - **🏗️ Architectural Organization** — Working in a 3-member team requires a strict **Separation of Concerns** (MVC-like pattern) so multiple developers can work on the database layer, UI views, and controllers simultaneously without causing code conflicts.
 
 ---
 
 ## 💡 Proposed Solution
 
-This project resolves these issues by developing a **modern, dark-themed Python desktop storefront application** using [CustomTkinter](https://github.com/TomSchimansky/CustomTkinter) backed by a **MySQL database**.
+This project resolves these issues by developing a **modern, dark-themed Python desktop storefront application** using [CustomTkinter](https://github.com/TomSchimansky/CustomTkinter) backed by a relational database system.
 
 By enforcing a strict decoupled architecture:
 
@@ -67,13 +68,14 @@ By enforcing a strict decoupled architecture:
 
 ## ✨ Features
 
-- 🔑 **Secure Login & Registration** — Password hashing and credential validation against MySQL
-- 🗂️ **Dynamic Game Catalog** — Responsive grid layout populated from live database queries
-- 🎨 **Modern Dark UI** — Built with CustomTkinter for a Steam-like aesthetic
-- 🗃️ **MVC Architecture** — Clean separation of views, controllers, and database layers
-- 👤 **User Session Management** — Persistent login sessions without performance overhead
-- 🛒 **Game Detail Views** — Title, genre, pricing, and asset display per game entry
-- 🔍 **Browsing & Filtering** — Navigate catalog by genre or search parameters
+- 🔑 **Secure Login & Registration** — Password hashing (SHA-256) and credential validation.
+- 📧 **Automated Email Notifications** — Automatic "Thank You" emails sent to new users via Gmail SMTP upon successful registration.
+- ✅ **Gmail Validation** — Integrated validation to ensure only valid Gmail addresses are used during sign-up.
+- 🗂️ **Dynamic Game Catalog** — Responsive grid layout populated from live database queries.
+- 🎨 **Modern Dark UI** — Built with CustomTkinter for a Steam-like aesthetic with optimized background elements.
+- 🗃️ **MVC Architecture** — Clean separation of views, controllers, and database layers.
+- 👤 **User Session Management** — Persistent login sessions without performance overhead.
+- 🛒 **Game Detail Views** — Title, genre, pricing, and asset display per game entry.
 
 ---
 
@@ -83,9 +85,22 @@ By enforcing a strict decoupled architecture:
 |--------------|-----------------------------------|
 | Language     | Python 3.10+                      |
 | GUI Framework | CustomTkinter                    |
-| Database     | MySQL (via `mysql-connector-python`) |
+| Database     | SQLite / MySQL                    |
+| Auth         | SHA-256 Hashing, Gmail SMTP       |
 | Architecture | MVC (Model-View-Controller)       |
 | Assets       | PNG/JPG images stored in `assets/` |
+
+---
+
+## 📈 Recent Progress
+
+We have recently completed several critical milestones:
+
+1. **UI Refinement:** Optimized the main login view, including resizing the background controller icon for better aesthetics and expanding the login frame to provide a more spacious, modern feel.
+2. **Full Registration System:** Implemented a dedicated registration window with direct form inputs for Gmail, Username, and Password.
+3. **Database Integration:** Set up the relational database layer with automated table creation and secure user data persistence.
+4. **Email Automation:** Successfully integrated Gmail's SMTP service to send automated, professional welcome emails to new users upon registration.
+5. **Security Updates:** Implemented SHA-256 password hashing to ensure user credentials are never stored in plain text.
 
 ---
 
@@ -106,14 +121,9 @@ The application follows a strict **MVC-like pattern** to ensure each team member
                │ SQL Queries
 ┌──────────────▼──────────────────────┐
 │          Data Layer                 │
-│   (database/ — MySQL Connector)     │
+│   (database/ — SQLite/MySQL)        │
 └─────────────────────────────────────┘
 ```
-
-This architecture means:
-- **UI changes** in `views/` never break database logic
-- **Business rules** in `controllers/` remain independent of how data is stored or displayed
-- **Database queries** in `database/` can be swapped or extended without touching the UI
 
 ---
 
@@ -126,18 +136,18 @@ game_store_desktop/
 │
 ├── src/
 │   ├── views/               # All CustomTkinter UI screens
-│   │   ├── login_view.py
-│   │   ├── register_view.py
+│   │   ├── main_view.py     # Main Login screen
+│   │   ├── register_view.py # New Registration screen
 │   │   ├── catalog_view.py
 │   │   └── game_detail_view.py
 │   │
 │   ├── controllers/         # Business logic & event handling
-│   │   ├── auth_controller.py
+│   │   ├── auth_controller.py # Login & Registration logic + Emailing
 │   │   └── catalog_controller.py
 │   │
 │   └── database/            # Database connection & queries
-│       ├── connection.py
-│       └── queries.py
+│       ├── connection.py    # Database connection management
+│       └── queries.py       # SQL query abstractions
 │
 ├── assets/                  # Game cover images and UI assets
 │   └── ...
@@ -154,7 +164,6 @@ game_store_desktop/
 Ensure you have the following installed:
 
 - Python **3.10** or higher
-- MySQL Server **8.0** or higher
 - `pip` package manager
 
 ### Installation
@@ -167,22 +176,10 @@ Ensure you have the following installed:
 
 2. **Install dependencies**
    ```bash
-   pip install customtkinter mysql-connector-python Pillow
+   pip install customtkinter Pillow
    ```
 
-3. **Configure the database connection**
-
-   Open `src/database/connection.py` and update the credentials:
-   ```python
-   DB_CONFIG = {
-       "host": "localhost",
-       "user": "your_mysql_user",
-       "password": "your_mysql_password",
-       "database": "game_store_db"
-   }
-   ```
-
-4. **Run the application**
+3. **Run the application**
    ```bash
    python main.py
    ```
@@ -191,32 +188,27 @@ Ensure you have the following installed:
 
 ## 🗄️ Database Setup
 
-Run the following SQL script to initialize the database schema:
+The application automatically initializes the database schema upon the first run. For manual setup, use the following schema:
 
 ```sql
-CREATE DATABASE IF NOT EXISTS game_store_db;
-USE game_store_db;
-
-CREATE TABLE users (
-    id          INT AUTO_INCREMENT PRIMARY KEY,
-    username    VARCHAR(50)  UNIQUE NOT NULL,
-    email       VARCHAR(100) UNIQUE NOT NULL,
-    password    VARCHAR(255) NOT NULL,   -- store hashed passwords
+CREATE TABLE IF NOT EXISTS users (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    username    TEXT UNIQUE NOT NULL,
+    email       TEXT UNIQUE NOT NULL,
+    password    TEXT NOT NULL,
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE games (
-    id          INT AUTO_INCREMENT PRIMARY KEY,
-    title       VARCHAR(100) NOT NULL,
-    genre       VARCHAR(50),
+CREATE TABLE IF NOT EXISTS games (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    title       TEXT NOT NULL,
+    genre       TEXT,
     price       DECIMAL(10, 2) NOT NULL,
     description TEXT,
-    cover_image VARCHAR(255),            -- relative path to assets/
-    release_year YEAR
+    cover_image TEXT,
+    release_year INTEGER
 );
 ```
-
-Populate the `games` table with sample data to see the catalog in action.
 
 ---
 
@@ -225,7 +217,7 @@ Populate the `games` table with sample data to see the catalog in action.
 | Screen        | Description                                      |
 |---------------|--------------------------------------------------|
 | **Login**     | Authenticate with existing credentials           |
-| **Register**  | Create a new account with hashed password storage |
+| **Register**  | Create a new account with Gmail and hashed password |
 | **Catalog**   | Browse all available games in a responsive grid  |
 | **Detail View** | View full game info: title, genre, price, and description |
 
@@ -240,8 +232,6 @@ This project was built as a team academic submission. To contribute or extend it
 3. Commit your changes: `git commit -m "Add: your feature description"`
 4. Push to the branch: `git push origin feature/your-feature`
 5. Open a Pull Request
-
-Please follow the existing MVC structure — new features should maintain the separation between `views/`, `controllers/`, and `database/`.
 
 ---
 
