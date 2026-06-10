@@ -1,5 +1,6 @@
 import customtkinter as ctk
 from src.views.register_view import RegisterView
+from src.views.dashboard_view import DashboardView
 from src.controllers.auth_controller import AuthController
 from tkinter import messagebox
 
@@ -10,12 +11,16 @@ class MainView(ctk.CTk):
         # Window Setup
         self.title("GameVault")
         self.geometry(f"{self.winfo_screenwidth()}x{self.winfo_screenheight()}+0+0")
+        self.update_idletasks() # Force geometry updates
         self.after(0, lambda: self.state('zoomed')) # Maximize window
 
         # Set default appearance
         ctk.set_appearance_mode("light")
         self.current_theme = "light"
         self.configure(fg_color=("#ffffff", "#1a1a1a")) # Explicitly set background colors
+
+        # Container for main content (Dashboard)
+        self.dashboard = None
 
         # Theme Toggle Button (Top Right)
         self.theme_button = ctk.CTkButton(
@@ -43,6 +48,7 @@ class MainView(ctk.CTk):
         self.bg_icon.place(relx=0.5, rely=0.5, anchor="center")
 
         # Decorative Top Bubbles
+        self.bg_elements = []
         self._create_background_elements()
 
         # Login Interface (Centered Frame)
@@ -129,7 +135,16 @@ class MainView(ctk.CTk):
             font=("Arial Bold", 18),
             command=self.handle_login
         )
-        self.login_button.pack(pady=(40, 15))
+        self.login_button.pack(pady=(40, 10))
+
+        # Inline Error Message Label (Hidden by default)
+        self.error_label = ctk.CTkLabel(
+            self.login_frame,
+            text="",
+            font=("Arial", 13),
+            text_color="#e74c3c" # Professional red color
+        )
+        self.error_label.pack(pady=(0, 10))
 
         # Register Link
         self.register_label = ctk.CTkLabel(
@@ -142,19 +157,57 @@ class MainView(ctk.CTk):
         self.register_label.pack()
         self.register_label.bind("<Button-1>", lambda e: self.open_register())
 
+        # Bind Enter Key to handle_login
+        self.bind("<Return>", lambda e: self.handle_login())
+
     def open_register(self):
         RegisterView(self)
 
     def handle_login(self):
-        username = self.username_entry.get()
+        # Clear any previous error
+        self.error_label.configure(text="")
+
+        # Strip leading/trailing whitespace to prevent login errors from accidental spaces
+        username = self.username_entry.get().strip()
         password = self.password_entry.get()
         
+        if not username or not password:
+            self.error_label.configure(text="Please enter both username and password.")
+            return
+
         success, result = AuthController.login_user(username, password)
         if success:
-            messagebox.showinfo("Success", f"Welcome, {username}!")
-            # Future: Transition to Store View
+            self.animate_transition()
         else:
-            messagebox.showerror("Error", result)
+            self.error_label.configure(text=result)
+
+    def animate_transition(self):
+        """Animates the login frame sliding out to the left slowly."""
+        try:
+            current_relx = float(self.login_frame.place_info().get('relx', 0.5))
+            if current_relx > -0.5:
+                # Move left (decrease relx) at a slower pace
+                new_relx = current_relx - 0.015 
+                self.login_frame.place(relx=new_relx)
+                self.after(15, self.animate_transition)
+            else:
+                self.login_frame.place_forget()
+                # Show the sidebar/dashboard while keeping background visible
+                self.show_dashboard()
+        except Exception as e:
+            print(f"Animation error: {e}")
+
+    def _clear_background(self):
+        """Removes decorative background elements and icons."""
+        self.bg_icon.place_forget()
+        for element in self.bg_elements:
+            element.place_forget()
+
+    def show_dashboard(self):
+        """Initializes and displays the Dashboard view."""
+        if not self.dashboard:
+            self.dashboard = DashboardView(self)
+            self.dashboard.place(relx=0.5, rely=0.5, anchor="center", relwidth=1, relheight=1)
 
     def toggle_password_visibility(self):
         if self.password_visible:
@@ -178,6 +231,7 @@ class MainView(ctk.CTk):
                                   fg_color=("#f2f2f2", "#222222"), border_width=0)
             bubble.place(relx=x, rely=y, anchor="center")
             bubble.lower()
+            self.bg_elements.append(bubble)
 
         stars = [
             (0.15, 0.20, 20), (0.80, 0.25, 15), (0.20, 0.70, 18),
@@ -188,6 +242,8 @@ class MainView(ctk.CTk):
                                 text_color=("#e0e0e0", "#282828"))
             star.place(relx=x, rely=y, anchor="center")
             star.lower()
+            self.bg_elements.append(star)
+
 
     def toggle_theme(self):
         if self.current_theme == "light":

@@ -30,7 +30,7 @@ class AuthController:
     def _send_welcome_email(username, email):
         """Sends a formal thank you email to the newly registered user."""
         sender_email = "faizantoheed456@gmail.com" # Use your actual gmail here
-        sender_password = "oqbu ycyy uooq dqzy"  # Your new 16-character App Password
+        sender_password = "titggzgxtlycegyk"  # Your new 16-character App Password
         
         subject = "Welcome to GameVault!"
         body = f"""

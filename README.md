@@ -235,12 +235,43 @@ This project was built as a team academic submission. To contribute or extend it
 
 ---
 
-## 📄 License
+## ## 🚀 Latest Updates (June 11, 2026)
 
-This project is intended for academic and educational purposes. All rights belong to the respective contributors.
+Today's development phase focused on transforming the storefront into a high-performance, visually authentic digital marketplace.
+
+### 🎮 Advanced Storefront & Catalog
+- **Massive Database Expansion:** Added 50+ legendary titles across 6 curated categories: *Trending, Action/FPS, Horror, Strategy/Sim, Racing/Sports,* and *Indie Gems*.
+- **True Multi-Platform Support:** Diversified the catalog with official titles from **Epic Games, Riot Games, Battle.net, Rockstar,** and **Steam**.
+- **Authentic Visuals:** Integrated official high-resolution Steam Store capsules and first-party CDN assets for 100% visual authenticity.
+- **Interactive Discovery:** Every game card is clickable and opens the official game storefront directly in the user's web browser.
+
+### ⚡ Performance & Engine Optimizations
+- **High-Performance UI Refactor:** Implemented a persistent header/body architecture in `DashboardView` to eliminate input lag and UI hangs during searches.
+- **Asynchronous Image Management:** Created a multithreaded `ImageManager` that fetches and caches assets in the background, keeping the main UI 100% responsive.
+- **Intelligent Pre-loading:** The system now pre-fetches top category assets immediately upon login to ensure an instantaneous browsing experience.
+- **Debounced Real-time Search:** Implemented a smart search engine that filters Title, Genre, and Platform as you type, with a 300ms throttle to optimize database load.
+
+### 🛠️ UX & Workflow Refinements
+- **Smooth Transition Engine:** Added a custom "Slide-to-Left" animation that elegantly moves the login interface off-screen to reveal the dashboard.
+- **Robust Authentication:** 
+    - Added automatic whitespace trimming for usernames.
+    - Implemented **Enter Key** support for instant login.
+    - Replaced disruptive popups with modern, inline red error messaging.
+- **Asset Resilience:** Built a dual-CDN fallback system to handle DNS failures and ensure images always load correctly.
 
 ---
 
-<div align="center">
-  <sub>Built with ❤️ for Software Construction and Development · 2026</sub>
-</div>
+## 🛠️ Tech Stack
+- **Frontend:** CustomTkinter (Python)
+- **Database:** SQLite3
+- **Logic:** Decoupled MVC Architecture
+- **Networking:** Requests & Multithreading
+- **Imaging:** PIL (Pillow)
+- **Security:** SHA-256 Hashing & Google App Passwords
+
+---
+
+## 📦 Getting Started
+1. **Configure Email:** Generate a Google App Password and update `src/controllers/auth_controller.py`.
+2. **Run Application:** `python main.py`
+3. **Register/Login:** Experience the smooth transition to the unified Game Store.

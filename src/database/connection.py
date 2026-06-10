@@ -35,7 +35,11 @@ class DatabaseConnection:
                 price DECIMAL(10, 2) NOT NULL,
                 description TEXT,
                 cover_image TEXT,
-                release_year INTEGER
+                release_year INTEGER,
+                platform TEXT,
+                rating REAL DEFAULT 0.0,
+                is_trending INTEGER DEFAULT 0,
+                website_url TEXT
             )
         ''')
         
