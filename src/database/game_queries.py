@@ -37,8 +37,10 @@ class GameQueries:
         db = DatabaseConnection()
         cursor = db.get_cursor()
         
-        # Clean reset for replacement
-        cursor.execute("DELETE FROM games")
+        # Check if games already exist
+        cursor.execute("SELECT COUNT(*) FROM games")
+        if cursor.fetchone()[0] > 0:
+            return # Data already exists, skip
         
         # Format: Title, Genre, Price, Description, Local_Img, Year, Platform, Rating, Is_Trending, URL, Remote_Img
         games = [
@@ -95,3 +97,93 @@ class GameQueries:
             games
         )
         db.commit()
+
+    @staticmethod
+    def get_collection_status(user_id, game_id):
+        db = DatabaseConnection()
+        cursor = db.get_cursor()
+        cursor.execute("SELECT is_favorite, is_installed FROM user_library WHERE user_id = ? AND game_id = ?", (user_id, game_id))
+        result = cursor.fetchone()
+        return result if result else (0, 0)
+
+    @staticmethod
+    def update_collection_status(user_id, game_id, is_favorite, is_installed):
+        db = DatabaseConnection()
+        cursor = db.get_cursor()
+        try:
+            if not is_favorite and not is_installed:
+                cursor.execute("DELETE FROM user_library WHERE user_id = ? AND game_id = ?", (user_id, game_id))
+            else:
+                cursor.execute("""
+                    INSERT INTO user_library (user_id, game_id, is_favorite, is_installed)
+                    VALUES (?, ?, ?, ?)
+                    ON CONFLICT(user_id, game_id) DO UPDATE SET
+                    is_favorite = excluded.is_favorite,
+                    is_installed = excluded.is_installed
+                """, (user_id, game_id, is_favorite, is_installed))
+            db.commit()
+            return True
+        except Exception as e:
+            print(f"Error updating collection status: {e}")
+            return False
+
+    @staticmethod
+    def get_user_favorites(user_id):
+        db = DatabaseConnection()
+        cursor = db.get_cursor()
+        cursor.execute("""
+            SELECT g.* FROM games g
+            JOIN user_library ul ON g.id = ul.game_id
+            WHERE ul.user_id = ? AND ul.is_favorite = 1
+            ORDER BY ul.added_date DESC
+        """, (user_id,))
+        return cursor.fetchall()
+
+    @staticmethod
+    def get_user_installed(user_id):
+        db = DatabaseConnection()
+        cursor = db.get_cursor()
+        cursor.execute("""
+            SELECT g.* FROM games g
+            JOIN user_library ul ON g.id = ul.game_id
+            WHERE ul.user_id = ? AND ul.is_installed = 1
+            ORDER BY ul.added_date DESC
+        """, (user_id,))
+        return cursor.fetchall()
+
+    @staticmethod
+    def get_user_library(user_id):
+        """Returns all games in user's collection (either favorite or installed)"""
+        db = DatabaseConnection()
+        cursor = db.get_cursor()
+        cursor.execute("""
+            SELECT g.* FROM games g
+            JOIN user_library ul ON g.id = ul.game_id
+            WHERE ul.user_id = ?
+            ORDER BY ul.added_date DESC
+        """, (user_id,))
+        return cursor.fetchall()
+
+    @staticmethod
+    def get_user_stats(user_id):
+        db = DatabaseConnection()
+        cursor = db.get_cursor()
+        
+        cursor.execute("""
+            SELECT COUNT(*) FROM user_library ul
+            JOIN games g ON ul.game_id = g.id
+            WHERE ul.user_id = ? AND ul.is_favorite = 1
+        """, (user_id,))
+        fav_count = cursor.fetchone()[0]
+        
+        cursor.execute("""
+            SELECT COUNT(*) FROM user_library ul
+            JOIN games g ON ul.game_id = g.id
+            WHERE ul.user_id = ? AND ul.is_installed = 1
+        """, (user_id,))
+        installed_count = cursor.fetchone()[0]
+        
+        return {
+            "wishlist": fav_count,
+            "installed": installed_count
+        }

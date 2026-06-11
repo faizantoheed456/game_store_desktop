@@ -177,6 +177,7 @@ class MainView(ctk.CTk):
 
         success, result = AuthController.login_user(username, password)
         if success:
+            self.current_user = result # result is the user tuple
             self.animate_transition()
         else:
             self.error_label.configure(text=result)
@@ -206,8 +207,24 @@ class MainView(ctk.CTk):
     def show_dashboard(self):
         """Initializes and displays the Dashboard view."""
         if not self.dashboard:
-            self.dashboard = DashboardView(self)
+            self.dashboard = DashboardView(self, self.current_user, logout_callback=self.handle_logout)
             self.dashboard.place(relx=0.5, rely=0.5, anchor="center", relwidth=1, relheight=1)
+
+    def handle_logout(self):
+        """Logs out the user and returns to the login screen."""
+        if self.dashboard:
+            self.dashboard.place_forget()
+            self.dashboard.destroy()
+            self.dashboard = None
+        
+        self.current_user = None
+        self.username_entry.delete(0, 'end')
+        self.password_entry.delete(0, 'end')
+        
+        # Reset login frame position and show it
+        self.login_frame.place(relx=0.5, rely=0.5, anchor="center")
+        self._create_background_elements() # Re-add background elements
+        self.bg_icon.place(relx=0.5, rely=0.5, anchor="center")
 
     def toggle_password_visibility(self):
         if self.password_visible:

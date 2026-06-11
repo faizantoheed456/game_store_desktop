@@ -1,15 +1,22 @@
 import customtkinter as ctk
 from src.database.game_queries import GameQueries
 from src.database.image_manager import ImageManager
+from src.views.game_detail_view import GameDetailView
+from src.views.profile_view import ProfileView
+from src.views.edit_profile_view import EditProfileView
+from src.views.change_password_view import ChangePasswordView
+from src.views.games_hub_view import GamesHubView
 from PIL import Image
 import webbrowser
 import os
 
 class DashboardView(ctk.CTkFrame):
-    def __init__(self, parent):
+    def __init__(self, parent, user_data=None, logout_callback=None):
         super().__init__(parent, fg_color="transparent")
         
         # State
+        self.current_user = user_data
+        self.on_logout = logout_callback
         self.search_timer = None
         self.current_view = "store"
         
@@ -36,6 +43,7 @@ class DashboardView(ctk.CTkFrame):
 
         self.store_btn = self._create_sidebar_button("🎮  Game Store", self.show_store)
         self.library_btn = self._create_sidebar_button("📚  My Library", self.show_library)
+        self.games_hub_btn = self._create_sidebar_button("✨  Have a fun!", self.show_games_hub)
         self.profile_btn = self._create_sidebar_button("👤  Profile", self.show_profile)
 
         # 2. Main Content Container
@@ -79,9 +87,7 @@ class DashboardView(ctk.CTkFrame):
         self._update_btn_states(self.store_btn)
         self.header_frame.grid() # Ensure search is visible
         
-        # Clear body only
-        for widget in self.body_container.winfo_children():
-            widget.destroy()
+        self._clear_body()
 
         scrollable_frame = ctk.CTkScrollableFrame(self.body_container, fg_color="transparent")
         scrollable_frame.grid(row=0, column=0, sticky="nsew")
@@ -92,6 +98,19 @@ class DashboardView(ctk.CTkFrame):
         else:
             self.clear_search_btn.place_forget()
             self._render_default_store(scrollable_frame)
+
+    def show_game_detail(self, game):
+        self.current_view = "detail"
+        self.header_frame.grid_remove() # Hide search when in detail view
+        
+        self._clear_body()
+            
+        detail_view = GameDetailView(
+            self.body_container, game, 
+            user_data=self.current_user, 
+            on_back_callback=self.show_store
+        )
+        detail_view.grid(row=0, column=0, sticky="nsew")
 
     def clear_search(self):
         self.search_entry.delete(0, 'end')
@@ -160,6 +179,7 @@ class DashboardView(ctk.CTkFrame):
         
         def on_img_loaded(ctk_img):
             if img_label.winfo_exists():
+                # ctk_img is already a CTkImage from ImageManager
                 img_label.configure(text="", image=ctk_img)
 
         loaded_img = ImageManager.get_image(remote_url, local_name, callback=on_img_loaded)
@@ -172,23 +192,152 @@ class DashboardView(ctk.CTkFrame):
         price = "Free" if game[3] == 0 else f"${game[3]}"
         ctk.CTkLabel(card, text=price, font=("Arial Bold", 14), text_color="#2ecc71").pack(side="bottom", anchor="e", padx=12, pady=12)
 
-        url = game[10]
-        card.bind("<Button-1>", lambda e, u=url: webbrowser.open(u))
+        # Updated binding to show detail view
+        card.bind("<Button-1>", lambda e, g=game: self.show_game_detail(g))
+        # Ensure all children widgets also trigger the click
+        for widget in card.winfo_children():
+            widget.bind("<Button-1>", lambda e, g=game: self.show_game_detail(g))
+            
         return card
 
-    def show_library(self):
+    def show_library(self, filter_query=None):
         self.current_view = "library"
         self._update_btn_states(self.library_btn)
-        self.header_frame.grid_remove() # Hide search in library
-        for widget in self.body_container.winfo_children(): widget.destroy()
-        ctk.CTkLabel(self.body_container, text="My Collection", font=("Arial Bold", 32)).pack(pady=40)
+        self.header_frame.grid_remove() # Hide main store search
+        
+        self._clear_body()
+        
+        # Header for Library
+        lib_header = ctk.CTkFrame(self.body_container, fg_color="transparent")
+        lib_header.grid(row=0, column=0, sticky="ew", padx=40, pady=(40, 0))
+        lib_header.grid_columnconfigure(0, weight=1)
+        
+        ctk.CTkLabel(lib_header, text="My Collection", font=("Arial Bold", 32)).grid(row=0, column=0, sticky="w")
+        
+        # Library Search Bar
+        self.lib_search = ctk.CTkEntry(
+            lib_header, placeholder_text="Search in collection...", 
+            width=300, height=40, corner_radius=20
+        )
+        self.lib_search.grid(row=0, column=1, sticky="e")
+        if filter_query:
+            self.lib_search.insert(0, filter_query)
+        self.lib_search.bind("<KeyRelease>", self._on_library_search)
+
+        scrollable_frame = ctk.CTkScrollableFrame(self.body_container, fg_color="transparent")
+        scrollable_frame.grid(row=1, column=0, sticky="nsew")
+        self.body_container.grid_rowconfigure(1, weight=1)
+        
+        if not self.current_user:
+            ctk.CTkLabel(scrollable_frame, text="Please login to view your collection.", font=("Arial", 16)).pack(pady=40)
+            return
+
+        self._render_library_content(scrollable_frame, filter_query)
+
+    def _on_library_search(self, event):
+        query = self.lib_search.get().strip()
+        # Direct refresh for library search
+        for widget in self.body_container.winfo_children():
+            if isinstance(widget, ctk.CTkScrollableFrame):
+                widget.destroy()
+        
+        scrollable_frame = ctk.CTkScrollableFrame(self.body_container, fg_color="transparent")
+        scrollable_frame.grid(row=1, column=0, sticky="nsew")
+        self._render_library_content(scrollable_frame, query if query else None)
+
+    def _render_library_content(self, parent, query):
+        user_id = self.current_user[0]
+        
+        def matches_query(game):
+            if not query: return True
+            q = query.lower()
+            return q in game[1].lower() or q in game[2].lower() or q in game[7].lower()
+
+        # 1. Installed Games
+        installed_games = [g for game in [GameQueries.get_user_installed(user_id)] for g in game if matches_query(g)]
+        if installed_games:
+            ctk.CTkLabel(parent, text="🖥 Installed on PC", font=("Arial Bold", 24)).pack(anchor="w", padx=40, pady=(30, 15))
+            grid_installed = ctk.CTkFrame(parent, fg_color="transparent")
+            grid_installed.pack(fill="x", padx=30)
+            for i, game in enumerate(installed_games):
+                self._create_game_card(grid_installed, game).grid(row=i // 5, column=i % 5, padx=8, pady=8, sticky="nsew")
+            for i in range(5): grid_installed.grid_columnconfigure(i, weight=1)
+
+        # 2. Wishlisted Games
+        favorite_games = [g for game in [GameQueries.get_user_favorites(user_id)] for g in game if matches_query(g)]
+        if favorite_games:
+            ctk.CTkLabel(parent, text="❤ My Wishlist", font=("Arial Bold", 24)).pack(anchor="w", padx=40, pady=(30, 15))
+            grid_fav = ctk.CTkFrame(parent, fg_color="transparent")
+            grid_fav.pack(fill="x", padx=30)
+            for i, game in enumerate(favorite_games):
+                self._create_game_card(grid_fav, game).grid(row=i // 5, column=i % 5, padx=8, pady=8, sticky="nsew")
+            for i in range(5): grid_fav.grid_columnconfigure(i, weight=1)
+
+        if not installed_games and not favorite_games:
+            text = f"No results found for '{query}'" if query else "Your collection is empty. Explore the store to add games!"
+            ctk.CTkLabel(parent, text=text, font=("Arial", 18), text_color="gray").pack(pady=100)
 
     def show_profile(self):
         self.current_view = "profile"
         self._update_btn_states(self.profile_btn)
         self.header_frame.grid_remove() # Hide search in profile
-        for widget in self.body_container.winfo_children(): widget.destroy()
-        ctk.CTkLabel(self.body_container, text="Account Settings", font=("Arial Bold", 32)).pack(pady=40)
+        
+        self._clear_body()
+        
+        profile_view = ProfileView(
+            self.body_container, self.current_user, 
+            logout_callback=self.on_logout, 
+            edit_callback=self.show_edit_profile,
+            security_callback=self.show_change_password
+        )
+        profile_view.grid(row=0, column=0, sticky="nsew")
+
+    def show_change_password(self):
+        self.current_view = "change_password"
+        self._clear_body()
+        
+        password_view = ChangePasswordView(
+            self.body_container, self.current_user, 
+            on_back_callback=self.show_profile
+        )
+        password_view.grid(row=0, column=0, sticky="nsew")
+
+    def show_edit_profile(self):
+        self.current_view = "edit_profile"
+        self._clear_body()
+        
+        edit_view = EditProfileView(
+            self.body_container, self.current_user, 
+            on_save_callback=self.on_profile_updated,
+            on_cancel_callback=self.show_profile
+        )
+        edit_view.grid(row=0, column=0, sticky="nsew")
+
+    def on_profile_updated(self, updated_user):
+        self.current_user = updated_user
+        # We also need to update the user in the MainView session if possible, 
+        # but for now, updating the dashboard's state is enough for current session.
+        self.show_profile()
+
+    def show_games_hub(self):
+        self.current_view = "games_hub"
+        self._update_btn_states(self.games_hub_btn)
+        self.header_frame.grid_remove() # Hide search in games hub
+        
+        self._clear_body()
+        
+        hub_view = GamesHubView(self.body_container)
+        hub_view.grid(row=0, column=0, sticky="nsew")
+
+    def _clear_body(self):
+        """Helper to clear body_container and reset grid weights."""
+        for widget in self.body_container.winfo_children():
+            widget.destroy()
+        
+        # Reset weights to prevent squashing from previous views
+        self.body_container.grid_rowconfigure(0, weight=1)
+        self.body_container.grid_rowconfigure(1, weight=0)
+        self.body_container.grid_columnconfigure(0, weight=1)
 
     def _create_sidebar_button(self, text, command):
         btn = ctk.CTkButton(
@@ -200,6 +349,6 @@ class DashboardView(ctk.CTkFrame):
         return btn
 
     def _update_btn_states(self, active_btn):
-        for btn in [self.store_btn, self.library_btn, self.profile_btn]:
+        for btn in [self.store_btn, self.library_btn, self.games_hub_btn, self.profile_btn]:
             btn.configure(fg_color="transparent")
         active_btn.configure(fg_color=("#ebebeb", "#2b2b2b"))
