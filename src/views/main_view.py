@@ -10,7 +10,7 @@ import threading
 
 class MainView(ctk.CTk):
     def __init__(self):
-        # 1. Set Scaling FIRST (Before any UI initialization)
+        # 1. Set Scaling FIRST
         ctk.set_appearance_mode("light")
         ctk.set_widget_scaling(1.4) 
         ctk.set_window_scaling(1.4)
@@ -20,21 +20,13 @@ class MainView(ctk.CTk):
         # Window Setup
         self.title("GameVault")
         self.geometry(f"{self.winfo_screenwidth()}x{self.winfo_screenheight()}+0+0")
-        self.state('zoomed')
-        self.update() # Force layout engine to register scaling and geometry
+        self.after(0, lambda: self.state('zoomed'))
+        
         self.current_theme = "light"
         self.configure(fg_color=("#ffffff", "#1a1a1a")) 
 
-    def _init_data(self):
-        """Initializes database with sample games and starts preloading images."""
-        try:
-            GameQueries.add_sample_games()
-            all_games = GameQueries.get_trending_games(20)
-            ImageManager.preload_images(all_games)
-        except Exception as e:
-            print(f"Data initialization error: {e}")
-
-        # ... (rest of the init code)
+        # Initialize Data and Preload Images in Background
+        threading.Thread(target=self._init_data, daemon=True).start()
 
         # Container for main content (Dashboard)
         self.dashboard = None
@@ -98,7 +90,7 @@ class MainView(ctk.CTk):
         )
         self.subtitle_label.pack(pady=(0, 50))
 
-        # Input Fields Container (to help with alignment)
+        # Input Fields Container
         self.input_container = ctk.CTkFrame(self.login_frame, fg_color="transparent")
         self.input_container.pack(pady=20)
 
@@ -112,7 +104,7 @@ class MainView(ctk.CTk):
         )
         self.username_entry.pack(pady=10)
 
-        # Password Container for Entry + Eye Button
+        # Password Container
         self.pass_container = ctk.CTkFrame(self.input_container, fg_color="transparent")
         self.pass_container.pack(pady=10)
 
@@ -127,7 +119,7 @@ class MainView(ctk.CTk):
         )
         self.password_entry.pack()
 
-        # Eye Icon Button (placed inside/over the entry)
+        # Eye Icon Button
         self.password_visible = False
         self.eye_button = ctk.CTkButton(
             self.pass_container,
@@ -139,7 +131,6 @@ class MainView(ctk.CTk):
             hover_color=("#ebebeb", "#2b2b2b"),
             command=self.toggle_password_visibility
         )
-        # Position the eye button at the end of the password entry
         self.eye_button.place(relx=0.92, rely=0.5, anchor="center")
 
         # Login Button
@@ -154,12 +145,12 @@ class MainView(ctk.CTk):
         )
         self.login_button.pack(pady=(40, 10))
 
-        # Inline Error Message Label (Hidden by default)
+        # Error Label
         self.error_label = ctk.CTkLabel(
             self.login_frame,
             text="",
             font=("Arial", 13),
-            text_color="#e74c3c" # Professional red color
+            text_color="#e74c3c"
         )
         self.error_label.pack(pady=(0, 10))
 
@@ -174,17 +165,23 @@ class MainView(ctk.CTk):
         self.register_label.pack()
         self.register_label.bind("<Button-1>", lambda e: self.open_register())
 
-        # Bind Enter Key to handle_login
+        # Bind Enter Key
         self.bind("<Return>", lambda e: self.handle_login())
+
+    def _init_data(self):
+        """Initializes database with sample games and starts preloading images."""
+        try:
+            GameQueries.add_sample_games()
+            all_games = GameQueries.get_trending_games(20)
+            ImageManager.preload_images(all_games)
+        except Exception as e:
+            print(f"Data initialization error: {e}")
 
     def open_register(self):
         RegisterView(self)
 
     def handle_login(self):
-        # Clear any previous error
         self.error_label.configure(text="")
-
-        # Strip leading/trailing whitespace to prevent login errors from accidental spaces
         username = self.username_entry.get().strip()
         password = self.password_entry.get()
         
@@ -194,35 +191,25 @@ class MainView(ctk.CTk):
 
         success, result = AuthController.login_user(username, password)
         if success:
-            self.current_user = result # result is the user tuple
+            self.current_user = result
             self.animate_transition()
         else:
             self.error_label.configure(text=result)
 
     def animate_transition(self):
-        """Animates the login frame sliding out to the left slowly."""
         try:
             current_relx = float(self.login_frame.place_info().get('relx', 0.5))
             if current_relx > -0.5:
-                # Move left (decrease relx) at a slower pace
                 new_relx = current_relx - 0.015 
                 self.login_frame.place(relx=new_relx)
                 self.after(15, self.animate_transition)
             else:
                 self.login_frame.place_forget()
-                # Show the sidebar/dashboard while keeping background visible
                 self.show_dashboard()
         except Exception as e:
             print(f"Animation error: {e}")
 
-    def _clear_background(self):
-        """Removes decorative background elements and icons."""
-        self.bg_icon.place_forget()
-        for element in self.bg_elements:
-            element.place_forget()
-
     def show_dashboard(self):
-        """Initializes and displays the Dashboard view."""
         if not self.dashboard:
             if self.current_user[1] == "admin":
                 self.dashboard = AdminDashboardView(self, logout_callback=self.handle_logout)
@@ -231,7 +218,6 @@ class MainView(ctk.CTk):
             self.dashboard.place(relx=0.5, rely=0.5, anchor="center", relwidth=1, relheight=1)
 
     def handle_logout(self):
-        """Logs out the user and returns to the login screen."""
         if self.dashboard:
             self.dashboard.place_forget()
             self.dashboard.destroy()
@@ -240,10 +226,7 @@ class MainView(ctk.CTk):
         self.current_user = None
         self.username_entry.delete(0, 'end')
         self.password_entry.delete(0, 'end')
-        
-        # Reset login frame position and show it
         self.login_frame.place(relx=0.5, rely=0.5, anchor="center")
-        self._create_background_elements() # Re-add background elements
         self.bg_icon.place(relx=0.5, rely=0.5, anchor="center")
 
     def toggle_password_visibility(self):
@@ -257,7 +240,6 @@ class MainView(ctk.CTk):
             self.password_visible = True
 
     def _create_background_elements(self):
-        # Bubble configurations: (relx, rely, size)
         bubbles = [
             (0.10, -0.05, 120), (0.25, 0.05, 80), (0.45, -0.02, 150),
             (0.65, 0.08, 60), (0.85, -0.04, 100), (-0.02, 0.30, 90),
@@ -280,7 +262,6 @@ class MainView(ctk.CTk):
             star.place(relx=x, rely=y, anchor="center")
             star.lower()
             self.bg_elements.append(star)
-
 
     def toggle_theme(self):
         if self.current_theme == "light":
