@@ -115,19 +115,25 @@ class DashboardView(ctk.CTkFrame):
             ("Indie Gems", lambda: GameQueries.get_games_by_genre("Indie", 5))
         ]
         
-        for title, query_fn in categories:
-            self._add_category_row_async(title, query_fn)
+        def load_all_sequentially():
+            for title, query_fn in categories:
+                # We need to create the container on the main thread
+                row_container = [] # Placeholder
+                self.after(0, lambda t=title, q=query_fn: self._add_row_callback(t, q))
+        
+        threading.Thread(target=load_all_sequentially, daemon=True).start()
 
-    def _add_category_row_async(self, title, query_fn):
+    def _add_row_callback(self, title, query_fn):
+        """Helper to create row container on main thread and then fetch data."""
         row_container = ctk.CTkFrame(self.scrollable_frame, fg_color="transparent")
         row_container.pack(fill="x")
         
-        def fetch_and_render():
+        def fetch():
             games = query_fn()
             if games:
                 self.after(0, lambda: self._render_category_row(row_container, title, games))
         
-        threading.Thread(target=fetch_and_render, daemon=True).start()
+        threading.Thread(target=fetch, daemon=True).start()
 
     def _render_category_row(self, container, title, games):
         ctk.CTkLabel(container, text=title, font=("Arial Bold", 24)).pack(anchor="w", padx=20, pady=(40, 15))
@@ -158,7 +164,7 @@ class DashboardView(ctk.CTkFrame):
             if img_label.winfo_exists():
                 img_label.configure(text="", image=ctk_img)
 
-        loaded_img = ImageManager.get_image(remote_url, local_name, callback=on_img_loaded)
+        loaded_img = ImageManager.get_image(remote_url, local_name, callback=on_img_loaded, master=self)
         if loaded_img:
             img_label.configure(text="", image=loaded_img)
 

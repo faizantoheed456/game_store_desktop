@@ -79,6 +79,7 @@ class AdminDashboardView(ctk.CTkFrame):
         
         # Default view
         self.show_users()
+        self.update() # Force layout calculation for scaling
 
     def _create_sidebar_btn(self, text, command):
         btn = ctk.CTkButton(

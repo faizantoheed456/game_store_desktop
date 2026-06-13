@@ -57,7 +57,7 @@ class GameDetailView(ctk.CTkFrame):
         # Use ImageManager to load
         local_name = self.game[5]
         remote_url = self.game[11]
-        loaded_img = ImageManager.get_image(remote_url, local_name, callback=update_image)
+        loaded_img = ImageManager.get_image(remote_url, local_name, callback=update_image, master=self)
         if loaded_img:
             self.img_label.configure(text="", image=loaded_img)
 

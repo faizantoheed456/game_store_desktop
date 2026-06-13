@@ -10,21 +10,18 @@ import threading
 
 class MainView(ctk.CTk):
     def __init__(self):
+        # 1. Set Scaling FIRST (Before any UI initialization)
+        ctk.set_appearance_mode("light")
+        ctk.set_widget_scaling(1.4) 
+        ctk.set_window_scaling(1.4)
+        
         super().__init__()
 
         # Window Setup
         self.title("GameVault")
         self.geometry(f"{self.winfo_screenwidth()}x{self.winfo_screenheight()}+0+0")
-        self.update_idletasks() # Force geometry updates
-        self.after(0, lambda: self.state('zoomed')) # Maximize window
-
-        # Initialize Data and Preload Images in Background
-        threading.Thread(target=self._init_data, daemon=True).start()
-
-        # Set default appearance
-        ctk.set_appearance_mode("light")
-        ctk.set_widget_scaling(1.4) # Significantly larger
-        ctk.set_window_scaling(1.4) # Ensure the window itself scales
+        self.state('zoomed')
+        self.update() # Force layout engine to register scaling and geometry
         self.current_theme = "light"
         self.configure(fg_color=("#ffffff", "#1a1a1a")) 
 
