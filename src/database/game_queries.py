@@ -187,3 +187,10 @@ class GameQueries:
             "wishlist": fav_count,
             "installed": installed_count
         }
+
+    @staticmethod
+    def get_all_games():
+        db = DatabaseConnection()
+        cursor = db.get_cursor()
+        cursor.execute("SELECT * FROM games")
+        return cursor.fetchall()

@@ -64,3 +64,10 @@ class UserQueries:
         cursor = db.get_cursor()
         cursor.execute("SELECT id, username, email, password, bio, birthday, profile_picture, created_at FROM users WHERE id = ?", (user_id,))
         return cursor.fetchone()
+
+    @staticmethod
+    def get_all_users():
+        db = DatabaseConnection()
+        cursor = db.get_cursor()
+        cursor.execute("SELECT id, username, email, created_at FROM users")
+        return cursor.fetchall()

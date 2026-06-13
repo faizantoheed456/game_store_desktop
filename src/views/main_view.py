@@ -1,6 +1,7 @@
 import customtkinter as ctk
 from src.views.register_view import RegisterView
 from src.views.dashboard_view import DashboardView
+from src.views.admin_dashboard_view import AdminDashboardView
 from src.controllers.auth_controller import AuthController
 from src.database.game_queries import GameQueries
 from src.database.image_manager import ImageManager
@@ -224,7 +225,10 @@ class MainView(ctk.CTk):
     def show_dashboard(self):
         """Initializes and displays the Dashboard view."""
         if not self.dashboard:
-            self.dashboard = DashboardView(self, self.current_user, logout_callback=self.handle_logout)
+            if self.current_user[1] == "admin":
+                self.dashboard = AdminDashboardView(self, logout_callback=self.handle_logout)
+            else:
+                self.dashboard = DashboardView(self, self.current_user, logout_callback=self.handle_logout)
             self.dashboard.place(relx=0.5, rely=0.5, anchor="center", relwidth=1, relheight=1)
 
     def handle_logout(self):

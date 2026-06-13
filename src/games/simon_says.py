@@ -64,21 +64,20 @@ class SimonSays(ctk.CTkFrame):
         self.after(300, lambda: self.btns[idx].configure(fg_color=orig_color))
 
     def _user_press(self, idx):
-        if self.sequence_playing: return
+        if self.sequence_playing or not self.sequence: return
         
         self.user_sequence.append(idx)
         self._flash(idx)
         
         current_step = len(self.user_sequence) - 1
         
-        # Safety check for race conditions
         if current_step >= len(self.sequence): return
 
         if self.user_sequence[current_step] != self.sequence[current_step]:
             self.status_label.configure(text="❌ WRONG! Final Score: " + str(len(self.sequence) - 1), text_color="#e74c3c")
             self.sequence = []
             self.start_btn.configure(state="normal", text="Try Again")
-            self.sequence_playing = True # Block until restart
+            self.sequence_playing = True 
             return
             
         if len(self.user_sequence) == len(self.sequence):

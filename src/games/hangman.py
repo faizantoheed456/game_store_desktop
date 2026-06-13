@@ -19,7 +19,7 @@ class Hangman(ctk.CTkFrame):
         
         ctk.CTkLabel(self, text="Hangman", font=("Arial Bold", 36)).pack(pady=40)
 
-        # Corrected word_display without letter_spacing
+        # Removed unsupported letter_spacing
         self.word_display = ctk.CTkLabel(self, text="", font=("Courier New Bold", 48))
         self.word_display.pack(pady=40)
 
