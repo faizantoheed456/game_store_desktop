@@ -73,3 +73,16 @@ class ClickerAdventure(ctk.CTkFrame):
         self.hp_label.configure(text=f"HP: {max(0, self.monster_hp)} / {self.monster_max_hp}", text_color="white")
         self.hp_bar.set(max(0, self.monster_hp) / self.monster_max_hp)
         self.upgrade_btn.configure(text=f"Upgrade Power (Cost: {self.power * 10} Gold)")
+
+    def _upgrade(self):
+        cost = self.power * 10
+        if self.gold >= cost:
+            self.gold -= cost
+            self.power += 1
+            self._update_ui()
+        else:
+            self.hp_label.configure(text="NOT ENOUGH GOLD!", text_color="#e74c3c")
+
+    def _spawn_monster(self):
+        icons = ["👾", "👹", "🤡", "🐉", "🕷️", "🧟"]
+        self.monster_icon.configure(text=random.choice(icons))
