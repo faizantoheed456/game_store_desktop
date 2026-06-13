@@ -1,203 +1,149 @@
 # 🎮 GameVault — Desktop Digital Game Storefront
 
-> A modern, dark-themed Python desktop application inspired by Steam. Features secure user authentication, a dynamic game catalog, and a fully decoupled MVC architecture backed by a high-performance SQLite database.
+> A high-performance, dark-themed Python desktop application inspired by Steam. Engineered with a decoupled MVC architecture and optimized for responsiveness with asynchronous background processing.
 
 ---
 
-## 👥 Team
+## 👥 The Development Team
 
-| Role           | Name              |
-|----------------|-------------------|
-| **Group Leader** | M. Rohan Jabbar |
-| **Developer**    | Faizan Toheed   |
-| **Developer**    | M. Usman        |
+| Role           | Name              | Contribution Focus |
+|----------------|-------------------|--------------------|
+| **Group Leader** | M. Rohan Jabbar | Project Management & Logic |
+| **Developer**    | Faizan Toheed   | Architecture, UI & Performance |
+| **Developer**    | M. Usman        | Database & Integration |
 
-**Course:** Software Construction and Development  
+**Course:** Software Construction and Development (2026)  
 **Repository:** [faizantoheed456/game_store_desktop](https://github.com/faizantoheed456/game_store_desktop)
 
 ---
 
-## 📌 Table of Contents
+## 🧩 Project Overview
 
-- [Problem Statement](#-problem-statement)
-- [Proposed Solution](#-proposed-solution)
-- [Features](#-features)
-- [Tech Stack](#-tech-stack)
-- [Architecture](#-architecture)
-- [Performance Optimizations](#-performance-optimizations)
-- [Project Structure](#-project-structure)
-- [Getting Started](#-getting-started)
-- [Database Setup](#-database-setup)
-- [Usage](#-usage)
-- [Contributing](#-contributing)
-- [License](#-license)
-
----
-
-## 🧩 Problem Statement
+GameVault is a modern solution to traditional desktop application challenges. It demonstrates how professional software engineering principles—like **Separation of Concerns**, **Asynchronous Programming**, and **Relational Data Management**—can be applied to create a seamless, high-end user experience using Python.
 
 ### 1. The Core Problem
+Most desktop projects suffer from "UI Freeze" when performing heavy tasks (like loading images or querying databases). They often have tightly coupled code where changing the UI breaks the database logic.
 
-Traditional desktop application development often suffers from **tight coupling** (spaghetti code), where the graphical user interface (GUI), business logic, and database interactions are tangled together. This makes the application difficult to scale, debug, and maintain.
-
-Furthermore, many introductory database or desktop application projects rely on **outdated, unappealing user interfaces** (like vanilla Tkinter) that fail to replicate the user experience (UX) expected of modern digital platforms.
-
-### 2. The Context & Scope
-
-In the context of a **Digital Game Store** (a desktop-based Steam clone), a seamless user experience is critical. Gamers and administrators expect a highly responsive visual grid layout, immediate data rendering, and a secure gateway. Building this requires addressing three specific challenges:
-
-- **🔐 Authentication Security** — Ensuring user credentials are encrypted, verified against a relational database management system (RDBMS), and session-managed without compromising application performance.
-- **📦 Data Layer Separation** — Dynamically pulling large sets of relational data (game titles, genres, pricing, and assets) from a database and rendering them cleanly without freezing the user interface.
-- **🏗️ Architectural Organization** — Working in a 3-member team requires a strict **Separation of Concerns** (MVC-like pattern) so multiple developers can work on the database layer, UI views, and controllers simultaneously without causing code conflicts.
+### 2. Our Solution
+GameVault solves this by using:
+- **MVC Architecture:** Total separation between what the user sees and how data is handled.
+- **Multithreading:** Heavy tasks (Email, DB queries, Image loading) never run on the main UI thread.
+- **Modern UI:** CustomTkinter provides a professional, hardware-accelerated aesthetic.
 
 ---
 
-## 💡 Proposed Solution
+## ✨ Features (The "Single Thing" Detailed List)
 
-This project resolves these issues by developing a **modern, dark-themed Python desktop storefront application** using [CustomTkinter](https://github.com/TomSchimansky/CustomTkinter) backed by a **SQLite database**.
+### 👤 User Experience
+- **🔐 Secure Authentication:** Full Login/Registration system with SHA-256 password hashing.
+- **📧 Welcome Emails:** Automated, non-blocking emails sent via Gmail SMTP upon registration.
+- **🎨 Dynamic Catalog:** A beautiful, responsive grid of games with live pricing and ratings.
+- **🔍 Advanced Search:** Instant filtering of hundreds of games by title, genre, or platform.
+- **📚 Personal Library:** Track which games you own ("Installed") and which are on your "Wishlist".
+- **🖼️ Profile Management:** Change your bio, birthday, and upload a custom profile picture with automatic center-cropping.
 
-By enforcing a strict decoupled architecture:
+### 🕹️ Games Hub (10 Integrated Mini-Games)
+A dedicated entertainment sector featuring:
+1.  **Tic Tac Toe:** Classic 3x3 with Bot or Human modes.
+2.  **Number Guesser:** High/Low logic puzzle.
+3.  **Rock Paper Scissors:** Animated weapon selection vs AI.
+4.  **Hangman:** Gaming-themed word discovery.
+5.  **Memory Match:** Visual pattern recognition.
+6.  **Monster Clicker:** An RPG-lite clicker with upgrades and level scaling.
+7.  **Math Quiz:** Mental calculation speed test.
+8.  **Typing Speed:** Real-time WPM and Accuracy tracker.
+9.  **Simon Says:** Sequential color memory challenge.
+10. **Vault Escape:** A story-driven choice adventure.
 
-- `views/` — All UI components and screen layouts
-- `controllers/` — Business logic and event handling
-- `database/` — SQL queries and database connection management
-
-...the system provides a **scalable boilerplate** that brings modern UI aesthetics and professional software engineering principles to desktop-based game data management.
-
----
-
-## ✨ Features
-
-- 🔑 **Secure Login & Registration** — Password hashing and credential validation.
-- 📧 **Email Automation** — Automated welcome emails sent via Gmail SMTP on registration.
-- 🗂️ **Dynamic Game Catalog** — Responsive grid layout with asynchronous image loading.
-- 🎨 **Modern Dark UI** — Built with CustomTkinter for a Steam-like aesthetic.
-- 🗃️ **MVC Architecture** — Clean separation of views, controllers, and database layers.
-- 👤 **Personalized Profiles** — User bio, birthday, and profile picture management.
-- 📚 **My Library** — Track wishlisted games and games marked as installed.
-- ✨ **Games Hub** — Built-in mini-games (Tic Tac Toe, Hangman, etc.) for extra fun!
-- 🔍 **Advanced Search** — Real-time filtering by title, genre, or platform.
-
----
-
-## 🛠️ Tech Stack
-
-| Layer        | Technology                        |
-|--------------|-----------------------------------|
-| Language     | Python 3.10+                      |
-| GUI Framework | CustomTkinter                    |
-| Database     | SQLite 3                          |
-| Architecture | MVC (Model-View-Controller)       |
-| Assets       | PIL (Pillow) for Image Handling   |
+### 🛠️ Administrative Controls
+A high-visibility "Command Center" for the admin (`admin` / `@jsj3q8p`):
+- **👥 User Management:** View all registered users and delete inactive/malicious accounts.
+- **🎮 Game Inventory:** Full database view of every game in the system.
+- **🔄 Live Refresh:** Synchronize the database state with a single click.
+- **🔍 High-Visibility UI:** Specialized 18pt font and 60px row height for effortless data auditing.
 
 ---
 
-## 🏛️ Architecture
+## 🛠️ Technical Stack
 
-The application follows a strict **MVC-like pattern** to ensure each team member could work independently on a separate layer:
-
-```
-┌─────────────────────────────────────┐
-│           User Interface            │
-│          (views/ — CTk Frames)      │
-└──────────────┬──────────────────────┘
-               │ Events / Callbacks
-┌──────────────▼──────────────────────┐
-│         Business Logic              │
-│    (controllers/ — Python Classes)  │
-└──────────────┬──────────────────────┘
-               │ SQL Queries
-┌──────────────▼──────────────────────┐
-│          Data Layer                 │
-│   (database/ — SQLite Connection)   │
-└─────────────────────────────────────┘
-```
+| Layer          | Technology                        | Purpose |
+|----------------|-----------------------------------|---------|
+| **Core**       | Python 3.10+                      | Primary Language |
+| **UI**         | CustomTkinter                     | Modern, Scalable GUI |
+| **Database**   | SQLite 3                          | Serverless, Relational Storage |
+| **Images**     | PIL (Pillow)                      | Advanced Image Processing |
+| **Network**    | Requests                          | Asynchronous Asset Fetching |
+| **Concurrency**| ThreadPoolExecutor                | Preventing UI Hangs |
 
 ---
 
-## ⚡ Performance Optimizations
+## 🏗️ Architecture & Performance
 
-To ensure a "lag-free" experience similar to modern digital storefronts, we implemented several key optimizations:
+### The MVC Pattern
+- **Models (`src/database/`)**: Pure data logic. Handles SQLite connections and SQL queries.
+- **Views (`src/views/`)**: Pure UI. No database logic lives here; they only render data received from controllers.
+- **Controllers (`src/controllers/`)**: The bridge. Manages authentication rules and business flow.
 
-- **Asynchronous Image Manager** — Images are fetched, resized, and cached in background threads using a `ThreadPoolExecutor`. This prevents the UI from "stuttering" while loading game covers.
-- **Background Database Tasks** — All SQL queries are offloaded to background threads. The UI remains responsive while data is being fetched.
-- **Multi-threaded SQLite** — Enabled `check_same_thread=False` to allow concurrent data access across background tasks.
-- **Smart Preloading** — Trending games and assets are pre-cached on application startup to ensure instant navigation.
+### Optimization Highlights
+- **Async Image Manager:** Images are downloaded or loaded from disk in background threads. They appear with a "fade-in" effect once ready, never slowing down the scroll.
+- **Thread-Safe UI:** Uses `master.after()` callbacks to ensure that background data updates the GUI only through safe channels.
+- **SQLite Concurrency:** Configured with `check_same_thread=False` to allow background indexing while the user browses the store.
 
 ---
 
-## 📁 Project Structure
+## 🗄️ Database Schema
 
-```
-game_store_desktop/
-│
-├── main.py                  # Application entry point
-│
-├── src/
-│   ├── views/               # CustomTkinter UI screens
-│   ├── controllers/         # Business logic & authentication
-│   ├── database/            # SQLite connection, queries, and image management
-│   └── games/               # Mini-games for the Games Hub
-│
-├── assets/                  # Local game images and UI assets
-│
-└── README.md
-```
+The system automatically initializes `game_store.db` with three primary tables:
+
+1.  **`users`**: Stores IDs, hashed passwords, bios, and profile metadata.
+2.  **`games`**: Stores the global catalog (titles, URLs, genres, platforms).
+3.  **`user_library`**: A junction table managing many-to-many relationships (Who owns what).
 
 ---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-
-- Python **3.10** or higher
-- `pip` package manager
+- Python installed on your machine.
+- Pip (Python Package Manager).
 
 ### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/faizantoheed456/game_store_desktop.git
-   cd game_store_desktop
-   ```
-
-2. **Install dependencies**
-   ```bash
-   pip install customtkinter Pillow requests
-   ```
-
-3. **Run the application**
-   ```bash
-   python main.py
-   ```
-   *Note: On first run, the application automatically initializes the SQLite database and populates it with sample games.*
+1.  **Clone the Repository**
+    ```bash
+    git clone https://github.com/faizantoheed456/game_store_desktop.git
+    cd game_store_desktop
+    ```
+2.  **Install Dependencies**
+    ```bash
+    pip install customtkinter Pillow requests
+    ```
+3.  **Launch the App**
+    ```bash
+    python main.py
+    ```
 
 ---
 
-## 🗄️ Database Setup
+## 📁 Project Structure
 
-The project uses **SQLite**, which is serverless. The database file (`game_store.db`) is automatically created and initialized by `src/database/connection.py`.
-
----
-
-## 🤝 Contributing
-
-This project was built as a team academic submission. To contribute or extend it:
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Commit your changes
-4. Push to the branch
-5. Open a Pull Request
+```text
+game_store_desktop/
+├── main.py                  # Entry Point
+├── game_store.db            # SQLite Database
+├── assets/                  # Local Assets & Profiles
+└── src/
+    ├── controllers/         # Auth & Business Logic
+    ├── database/            # SQL Queries & Image Manager
+    ├── games/               # Mini-Game Implementations
+    └── views/               # UI Frames (Login, Dashboard, Admin)
+```
 
 ---
 
-## 📄 License
-
-This project is intended for academic and educational purposes. All rights belong to the respective contributors.
+## 📄 License & Academic Context
+This project was developed for the **Software Construction and Development** course. All rights belong to the contributors. It is intended for educational demonstration of professional Python application architecture.
 
 ---
-
 <div align="center">
-  <sub>Built with ❤️ for Software Construction and Development · 2026</sub>
+  <sub>Built with ❤️ by the GameVault Team · 2026</sub>
 </div>
