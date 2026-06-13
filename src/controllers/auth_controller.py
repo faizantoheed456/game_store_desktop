@@ -1,5 +1,6 @@
 import hashlib
 import smtplib
+import threading
 from email.mime.text import MIMEText
 from src.database.queries import UserQueries
 
@@ -20,8 +21,8 @@ class AuthController:
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
         
         if UserQueries.create_user(username, email, hashed_password):
-            # Send Thank You Email
-            AuthController._send_welcome_email(username, email)
+            # Send Thank You Email in background
+            threading.Thread(target=AuthController._send_welcome_email, args=(username, email), daemon=True).start()
             return True, "Registration successful! A welcome email has been sent."
         else:
             return False, "An error occurred during registration."

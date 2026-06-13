@@ -3,6 +3,7 @@ from src.database.image_manager import ImageManager
 from src.database.game_queries import GameQueries
 from PIL import Image
 import webbrowser
+import threading
 
 class GameDetailView(ctk.CTkFrame):
     def __init__(self, parent, game_data, user_data=None, on_back_callback=None):
@@ -12,11 +13,9 @@ class GameDetailView(ctk.CTkFrame):
         self.user = user_data
         self.on_back = on_back_callback
         
-        # Get Collection Status
+        # State
         self.is_favorite = 0
         self.is_installed = 0
-        if self.user:
-            self.is_favorite, self.is_installed = GameQueries.get_collection_status(self.user[0], self.game[0])
         
         # Layout
         self.grid_columnconfigure(0, weight=1)
@@ -98,8 +97,6 @@ class GameDetailView(ctk.CTkFrame):
         )
         self.install_btn.pack(side="left", padx=(0, 10), expand=True, fill="x")
 
-        self._update_button_states()
-
         self.store_btn = ctk.CTkButton(
             self.btn_frame, text="🌐 Store", height=45, width=100, corner_radius=10,
             font=("Arial Bold", 14), fg_color="transparent", border_width=2,
@@ -107,11 +104,16 @@ class GameDetailView(ctk.CTkFrame):
         )
         self.store_btn.pack(side="left")
 
+        # Load Initial Collection Status Async
+        if self.user:
+            threading.Thread(target=self._load_status_async, daemon=True).start()
+        else:
+            self._update_button_states()
+
         # --- 3. Description Section ---
         ctk.CTkLabel(self.scroll_container, text="About This Game", font=("Arial Bold", 22)).pack(anchor="w", pady=(40, 15))
         
         description = self.game[4] if self.game[4] else "No description available for this title."
-        # If it's the short placeholder, let's make it look better
         if len(description) < 50:
             description = f"{description}\n\nExperience high-octane gameplay and immersive storytelling in this top-rated {self.game[2]} title. Available now on {self.game[7]}."
 
@@ -130,26 +132,28 @@ class GameDetailView(ctk.CTkFrame):
             font=("Arial Italic", 13), text_color="gray"
         ).pack(pady=15)
 
+    def _load_status_async(self):
+        self.is_favorite, self.is_installed = GameQueries.get_collection_status(self.user[0], self.game[0])
+        self.after(0, self._update_button_states)
+
     def toggle_favorite(self):
         if not self.user: return
         self.is_favorite = 1 if not self.is_favorite else 0
-        GameQueries.update_collection_status(self.user[0], self.game[0], self.is_favorite, self.is_installed)
+        threading.Thread(target=lambda: GameQueries.update_collection_status(self.user[0], self.game[0], self.is_favorite, self.is_installed), daemon=True).start()
         self._update_button_states()
 
     def toggle_installed(self):
         if not self.user: return
         self.is_installed = 1 if not self.is_installed else 0
-        GameQueries.update_collection_status(self.user[0], self.game[0], self.is_favorite, self.is_installed)
+        threading.Thread(target=lambda: GameQueries.update_collection_status(self.user[0], self.game[0], self.is_favorite, self.is_installed), daemon=True).start()
         self._update_button_states()
 
     def _update_button_states(self):
-        # Update Favorite Button
         if self.is_favorite:
             self.fav_btn.configure(text="❤ In Wishlist", fg_color=("#f9f9f9", "#333333"), text_color=("#e74c3c", "#ff4757"))
         else:
             self.fav_btn.configure(text="❤ Add to Wishlist", fg_color="#3498db", text_color="white")
 
-        # Update Installed Button
         if self.is_installed:
             self.install_btn.configure(text="🖥 Installed on PC", fg_color=("#2ecc71", "#27ae60"), text_color="white")
         else:

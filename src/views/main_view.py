@@ -2,7 +2,10 @@ import customtkinter as ctk
 from src.views.register_view import RegisterView
 from src.views.dashboard_view import DashboardView
 from src.controllers.auth_controller import AuthController
+from src.database.game_queries import GameQueries
+from src.database.image_manager import ImageManager
 from tkinter import messagebox
+import threading
 
 class MainView(ctk.CTk):
     def __init__(self):
@@ -14,10 +17,24 @@ class MainView(ctk.CTk):
         self.update_idletasks() # Force geometry updates
         self.after(0, lambda: self.state('zoomed')) # Maximize window
 
+        # Initialize Data and Preload Images in Background
+        threading.Thread(target=self._init_data, daemon=True).start()
+
         # Set default appearance
         ctk.set_appearance_mode("light")
         self.current_theme = "light"
-        self.configure(fg_color=("#ffffff", "#1a1a1a")) # Explicitly set background colors
+        self.configure(fg_color=("#ffffff", "#1a1a1a")) 
+
+    def _init_data(self):
+        """Initializes database with sample games and starts preloading images."""
+        try:
+            GameQueries.add_sample_games()
+            all_games = GameQueries.get_trending_games(20)
+            ImageManager.preload_images(all_games)
+        except Exception as e:
+            print(f"Data initialization error: {e}")
+
+        # ... (rest of the init code)
 
         # Container for main content (Dashboard)
         self.dashboard = None

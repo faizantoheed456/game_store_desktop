@@ -8,7 +8,7 @@ class DatabaseConnection:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(DatabaseConnection, cls).__new__(cls)
-            cls._instance.connection = sqlite3.connect(cls._db_path)
+            cls._instance.connection = sqlite3.connect(cls._db_path, check_same_thread=False)
             # Enable foreign keys
             cls._instance.connection.execute("PRAGMA foreign_keys = ON")
             cls._instance._create_tables()

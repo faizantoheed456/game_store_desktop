@@ -2,6 +2,7 @@ import customtkinter as ctk
 from src.database.game_queries import GameQueries
 from PIL import Image, ImageOps
 import os
+import threading
 
 class ProfileView(ctk.CTkFrame):
     def __init__(self, parent, user_data, logout_callback, edit_callback, security_callback):
@@ -12,8 +13,8 @@ class ProfileView(ctk.CTkFrame):
         self.on_edit = edit_callback
         self.on_security = security_callback
         
-        # Stats
-        self.stats = GameQueries.get_user_stats(self.user[0])
+        # Initial Stats (Placeholder)
+        self.stats = {"wishlist": 0, "installed": 0}
         
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -40,17 +41,9 @@ class ProfileView(ctk.CTkFrame):
         )
         self.avatar_label.pack(side="left", padx=(0, 30))
         
-        # Load profile picture with center cropping
+        # Load profile picture async
         if self.user[6] and os.path.exists(self.user[6]):
-            try:
-                pil_img = Image.open(self.user[6])
-                # Center crop to 1:1 aspect ratio
-                pil_img = ImageOps.fit(pil_img, (400, 400), Image.Resampling.LANCZOS)
-                # Correctly assign CTkImage
-                ctk_img = ctk.CTkImage(light_image=pil_img, dark_image=pil_img, size=(180, 180))
-                self.avatar_label.configure(text="", image=ctk_img)
-            except Exception as e:
-                print(f"Error loading profile picture: {e}")
+            threading.Thread(target=self._load_avatar_async, daemon=True).start()
 
         self.user_info = ctk.CTkFrame(self.header_frame, fg_color="transparent")
         self.user_info.pack(side="left", fill="y")
@@ -92,8 +85,11 @@ class ProfileView(ctk.CTkFrame):
         self.stats_frame.pack(fill="x")
         self.stats_frame.grid_columnconfigure((0, 1), weight=1)
 
-        self._create_stat_card(self.stats_frame, "Games in Wishlist", str(self.stats["wishlist"]), "❤", 0)
-        self._create_stat_card(self.stats_frame, "Installed on PC", str(self.stats["installed"]), "🖥", 1)
+        self.wishlist_card = self._create_stat_card(self.stats_frame, "Games in Wishlist", "0", "❤", 0)
+        self.installed_card = self._create_stat_card(self.stats_frame, "Installed on PC", "0", "🖥", 1)
+
+        # Load Stats Async
+        threading.Thread(target=self._load_stats_async, daemon=True).start()
 
         # --- 3. Account Actions ---
         ctk.CTkLabel(self.container, text="Account Actions", font=("Arial Bold", 24)).pack(anchor="w", pady=(60, 20))
@@ -124,6 +120,24 @@ class ProfileView(ctk.CTkFrame):
         )
         self.security_btn.pack(side="left")
 
+    def _load_avatar_async(self):
+        try:
+            pil_img = Image.open(self.user[6])
+            pil_img = ImageOps.fit(pil_img, (400, 400), Image.Resampling.LANCZOS)
+            ctk_img = ctk.CTkImage(light_image=pil_img, dark_image=pil_img, size=(180, 180))
+            self.after(0, lambda: self.avatar_label.configure(text="", image=ctk_img))
+        except Exception as e:
+            print(f"Error loading profile picture: {e}")
+
+    def _load_stats_async(self):
+        self.stats = GameQueries.get_user_stats(self.user[0])
+        self.after(0, self._update_stats_display)
+
+    def _update_stats_display(self):
+        # Update labels within cards (we need references)
+        self.wishlist_val_label.configure(text=str(self.stats["wishlist"]))
+        self.installed_val_label.configure(text=str(self.stats["installed"]))
+
     def _create_stat_card(self, parent, title, value, icon, col):
         card = ctk.CTkFrame(
             parent, height=150, corner_radius=20,
@@ -134,5 +148,12 @@ class ProfileView(ctk.CTkFrame):
         card.grid_propagate(False)
         
         ctk.CTkLabel(card, text=icon, font=("Arial", 40)).pack(pady=(20, 5))
-        ctk.CTkLabel(card, text=value, font=("Arial Bold", 32)).pack()
+        val_label = ctk.CTkLabel(card, text=value, font=("Arial Bold", 32))
+        val_label.pack()
         ctk.CTkLabel(card, text=title, font=("Arial", 14), text_color="gray").pack()
+        
+        # Save reference for async update
+        if col == 0: self.wishlist_val_label = val_label
+        else: self.installed_val_label = val_label
+        
+        return card
