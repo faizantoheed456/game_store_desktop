@@ -287,8 +287,6 @@ class DashboardView(ctk.CTkFrame):
 
     def _clear_body(self):
         for widget in self.body_container.winfo_children(): 
-            if hasattr(widget, "unbind_all"):
-                widget.unbind_all("<MouseWheel>")
             widget.destroy()
         self.body_container.grid_rowconfigure(0, weight=1)
         self.body_container.grid_rowconfigure(1, weight=0)

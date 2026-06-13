@@ -71,3 +71,16 @@ class UserQueries:
         cursor = db.get_cursor()
         cursor.execute("SELECT id, username, email, created_at FROM users")
         return cursor.fetchall()
+
+    @staticmethod
+    def delete_user(user_id):
+        db = DatabaseConnection()
+        cursor = db.get_cursor()
+        try:
+            cursor.execute("DELETE FROM user_library WHERE user_id = ?", (user_id,))
+            cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+            db.commit()
+            return True
+        except Exception as e:
+            print(f"Error deleting user: {e}")
+            return False

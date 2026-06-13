@@ -23,6 +23,8 @@ class MainView(ctk.CTk):
 
         # Set default appearance
         ctk.set_appearance_mode("light")
+        ctk.set_widget_scaling(1.4) # Significantly larger
+        ctk.set_window_scaling(1.4) # Ensure the window itself scales
         self.current_theme = "light"
         self.configure(fg_color=("#ffffff", "#1a1a1a")) 
 

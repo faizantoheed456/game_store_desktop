@@ -194,3 +194,17 @@ class GameQueries:
         cursor = db.get_cursor()
         cursor.execute("SELECT * FROM games")
         return cursor.fetchall()
+
+    @staticmethod
+    def delete_game(game_id):
+        db = DatabaseConnection()
+        cursor = db.get_cursor()
+        try:
+            # Delete from libraries first
+            cursor.execute("DELETE FROM user_library WHERE game_id = ?", (game_id,))
+            cursor.execute("DELETE FROM games WHERE id = ?", (game_id,))
+            db.commit()
+            return True
+        except Exception as e:
+            print(f"Error deleting game: {e}")
+            return False
