@@ -27,8 +27,9 @@ class ClickerAdventure(ctk.CTkFrame):
         self.monster_frame = ctk.CTkFrame(self, fg_color=("#f9f9f9", "#1a1a1a"), corner_radius=20, border_width=2)
         self.monster_frame.pack(pady=40, padx=100, fill="x")
         
-        self.monster_icon = ctk.CTkLabel(self.monster_frame, text="👾", font=("Arial", 120))
+        self.monster_icon = ctk.CTkLabel(self.monster_frame, text="👾", font=("Arial", 120), cursor="hand2")
         self.monster_icon.pack(pady=40)
+        self.monster_icon.bind("<Button-1>", lambda e: self._attack())
 
         self.hp_bar = ctk.CTkProgressBar(self.monster_frame, width=400)
         self.hp_bar.set(1.0)
@@ -66,7 +67,7 @@ class ClickerAdventure(ctk.CTkFrame):
             self._spawn_monster()
             self.hp_label.configure(text=f"DEFEATED! Level {self.level}", text_color="#2ecc71")
             
-        self.after(500, self._update_ui)
+        self._update_ui() # Update immediately
 
     def _update_ui(self):
         self.stats_label.configure(text=f"Level: {self.level}  |  Gold: {self.gold}  |  Power: {self.power}")

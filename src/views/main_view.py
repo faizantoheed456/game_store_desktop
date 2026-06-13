@@ -10,10 +10,10 @@ import threading
 
 class MainView(ctk.CTk):
     def __init__(self):
-        # 1. Set Scaling FIRST
+        # 1. Normalize Scaling
         ctk.set_appearance_mode("light")
-        ctk.set_widget_scaling(1.4) 
-        ctk.set_window_scaling(1.4)
+        ctk.set_widget_scaling(1.0) 
+        ctk.set_window_scaling(1.0)
         
         super().__init__()
 
