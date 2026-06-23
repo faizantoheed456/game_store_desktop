@@ -29,6 +29,7 @@ class DatabaseConnection:
                 profile_picture TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
+                 
         ''')
         
         # Games Table
